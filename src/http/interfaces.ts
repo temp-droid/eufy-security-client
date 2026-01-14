@@ -6,7 +6,7 @@ import type { ImageFileExtension } from "image-type" with {
     "resolution-mode": "import"
 };
 
-import { DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLocal, StreamMetadata } from "../p2p/interfaces";
+import { DatabaseCountByDate, DatabaseQueryByDate, DatabaseQueryLatestInfo, DatabaseQueryLocal, StreamMetadata } from "../p2p/interfaces";
 import { CommandResult, StorageInfoBodyHB3 } from "../p2p/models";
 import { AlarmEvent, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, TFCardStatus } from "../p2p/types";
 import { Camera, Device } from "./device";
@@ -235,6 +235,7 @@ export interface StationEvents {
     "image download": (station: Station, file: string, image: Buffer) => void;
     "database query latest": (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryLatestInfo>) => void;
     "database query local": (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryLocal>) => void;
+    "database query by date": (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryByDate>) => void;
     "database count by date": (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseCountByDate>) => void;
     "database delete": (station: Station, returnCode: DatabaseReturnCode, failedIds: Array<unknown>) => void;
     "sensor status": (station: Station, channel: number, status: number) => void;

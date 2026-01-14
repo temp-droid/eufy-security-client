@@ -9,7 +9,7 @@ import { Address, CmdCameraInfoResponse, CmdNotifyPayload, CommandResult, ESLAdv
 import { sendMessage, hasHeader, buildCheckCamPayload, buildIntCommandPayload, buildIntStringCommandPayload, buildCommandHeader, MAGIC_WORD, buildCommandWithStringTypePayload, isPrivateIp, buildLookupWithKeyPayload, sortP2PMessageParts, buildStringTypeCommandPayload, getRSAPrivateKey, decryptAESData, getNewRSAPrivateKey, findStartCode, isIFrame, generateLockSequence, decodeLockPayload, generateBasicLockAESKey, getLockVectorBytes, decryptLockAESData, buildLookupWithKeyPayload2, buildCheckCamPayload2, buildLookupWithKeyPayload3, decodeBase64, getVideoCodec, checkT8420, buildVoidCommandPayload, isP2PQueueMessage, buildTalkbackAudioFrameHeader, getLocalIpAddress, decodeP2PCloudIPs, decodeSmartSafeData, decryptPayloadData, decryptP2PData, getP2PCommandEncryptionKey, getNullTerminatedString, generateSmartLockAESKey, readNullTerminatedBuffer } from "./utils";
 import { RequestMessageType, ResponseMessageType, CommandType, ErrorCode, P2PDataType, P2PDataTypeHeader, AudioCodec, VideoCodec, P2PConnectionType, AlarmEvent, IndoorSoloSmartdropCommandType, SmartSafeCommandCode, ESLCommand, ESLBleCommand, TFCardStatus, EncryptionType, InternalP2PCommandType, SmartLockCommand, SmartLockBleCommandFunctionType2, SmartLockBleCommandFunctionType1, SmartLockFunctionType } from "./types";
 import { AlarmMode } from "../http/types";
-import { P2PDataMessage, P2PDataMessageAudio, P2PDataMessageBuilder, P2PMessageState, P2PDataMessageVideo, P2PMessage, P2PDataHeader, P2PDataMessageState, P2PClientProtocolEvents, DeviceSerial, P2PQueueMessage, P2PCommand, P2PVideoMessageState, P2PDatabaseResponse, P2PDatabaseQueryLatestInfoResponse, P2PDatabaseDeleteResponse, DatabaseQueryLatestInfo, DatabaseCountByDate, P2PDatabaseCountByDateResponse, P2PDatabaseQueryLocalResponse, DatabaseQueryLocal, P2PDatabaseQueryLocalHistoryRecordInfo, P2PDatabaseQueryLocalRecordCropPictureInfo, CustomDataType } from "./interfaces";
+import { P2PDataMessage, P2PDataMessageAudio, P2PDataMessageBuilder, P2PMessageState, P2PDataMessageVideo, P2PMessage, P2PDataHeader, P2PDataMessageState, P2PClientProtocolEvents, DeviceSerial, P2PQueueMessage, P2PCommand, P2PVideoMessageState, P2PDatabaseResponse, P2PDatabaseQueryLatestInfoResponse, P2PDatabaseDeleteResponse, DatabaseQueryLatestInfo, DatabaseCountByDate, P2PDatabaseCountByDateResponse, P2PDatabaseQueryLocalResponse, DatabaseQueryLocal, DatabaseQueryByDate, P2PDatabaseQueryByDateRecord, P2PDatabaseQueryLocalHistoryRecordInfo, P2PDatabaseQueryLocalRecordCropPictureInfo, CustomDataType } from "./interfaces";
 import { DskKeyResponse, ResultResponse, StationListResponse } from "../http/models";
 import { HTTPApi } from "../http/api";
 import { Device } from "../http/device";
@@ -2256,6 +2256,34 @@ export class P2PClientProtocol extends TypedEmitter<P2PClientProtocolEvents> {
                                     }
                                 }
                                 this.emit("database query local", databaseResponse.mIntRet, Array.from(result.values()) as DatabaseQueryLocal[]);
+                                break;
+                            }
+                            case CommandType.CMD_DATABASE_QUERY_BY_DATE: {
+                                let data: Array<P2PDatabaseQueryByDateRecord> = [];
+                                if (databaseResponse.data !== undefined && databaseResponse.data as unknown as string !== "[]")
+                                    data = databaseResponse.data as unknown as Array<P2PDatabaseQueryByDateRecord>;
+
+                                const result: Array<DatabaseQueryByDate> = [];
+                                for (const record of data) {
+                                    result.push({
+                                        device_sn: record.device_sn,
+                                        device_type: record.device_type,
+                                        start_time: parse(record.start_time, "YYYY-MM-DD HH:mm:ss"),
+                                        end_time: parse(record.end_time, "YYYY-MM-DD HH:mm:ss"),
+                                        storage_path: record.storage_path,
+                                        thumb_path: record.thumb_path,
+                                        cipher_id: record.cipher_id,
+                                        folder_size: record.folder_size,
+                                        frame_num: record.frame_num,
+                                        trigger_type: record.trigger_type,
+                                        video_type: record.video_type,
+                                        record_id: record.record_id,
+                                        station_sn: record.station_sn,
+                                        storage_type: record.storage_type,
+                                        storage_cloud: record.storage_cloud
+                                    });
+                                }
+                                this.emit("database query by date", databaseResponse.mIntRet, result);
                                 break;
                             }
                             case CommandType.CMD_DATABASE_DELETE: {

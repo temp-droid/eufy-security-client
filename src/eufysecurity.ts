@@ -14,7 +14,7 @@ import { PushNotificationService } from "./push/service";
 import { Credentials, PushMessage } from "./push/models";
 import { BatteryDoorbellCamera, Camera, Device, EntrySensor, FloodlightCamera, GarageCamera, IndoorCamera, Keypad, Lock, MotionSensor, SmartSafe, SoloCamera, UnknownDevice, WallLightCam, WiredDoorbellCamera, Tracker, DoorbellLock, LockKeypad, SmartDrop } from "./http/device";
 import { AlarmEvent, CommandType, DatabaseReturnCode, P2PConnectionType, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent, TFCardStatus } from "./p2p/types";
-import { DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLocal, StreamMetadata, DatabaseQueryLatestInfoLocal, DatabaseQueryLatestInfoCloud, RGBColor, DynamicLighting, MotionZone, CrossTrackingGroupEntry } from "./p2p/interfaces";
+import { DatabaseCountByDate, DatabaseQueryByDate, DatabaseQueryLatestInfo, DatabaseQueryLocal, StreamMetadata, DatabaseQueryLatestInfoLocal, DatabaseQueryLatestInfoCloud, RGBColor, DynamicLighting, MotionZone, CrossTrackingGroupEntry } from "./p2p/interfaces";
 import { CommandResult, StorageInfoBodyHB3 } from "./p2p/models";
 import { generateSerialnumber, generateUDID, getError, handleUpdate, isValidUrl, md5, parseValue, removeLastChar, waitForEvent } from "./utils";
 import { DeviceNotFoundError, StationNotFoundError, ReadOnlyPropertyError, NotSupportedError, AddUserError, DeleteUserError, UpdateUserUsernameError, UpdateUserPasscodeError, UpdateUserScheduleError, ensureError } from "./error";
@@ -537,6 +537,7 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
                         station.on("image download", (station: Station, file: string, image: Buffer) => this.onStationImageDownload(station, file, image));
                         station.on("database query latest", (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryLatestInfo>) => this.onStationDatabaseQueryLatest(station, returnCode, data));
                         station.on("database query local", (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryLocal>) => this.onStationDatabaseQueryLocal(station, returnCode, data));
+                        station.on("database query by date", (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryByDate>) => this.onStationDatabaseQueryByDate(station, returnCode, data));
                         station.on("database count by date", (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseCountByDate>) => this.onStationDatabaseCountByDate(station, returnCode, data));
                         station.on("database delete", (station: Station, returnCode: DatabaseReturnCode, failedIds: Array<unknown>) => this.onStationDatabaseDelete(station, returnCode, failedIds));
                         station.on("sensor status", (station: Station, channel: number, status: number) => this.onStationSensorStatus(station, channel, status));
@@ -2676,6 +2677,10 @@ export class EufySecurity extends TypedEmitter<EufySecurityEvents> {
 
     private onStationDatabaseQueryLocal(station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryLocal>): void {
         this.emit("station database query local", station, returnCode, data);
+    }
+
+    private onStationDatabaseQueryByDate(station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryByDate>): void {
+        this.emit("station database query by date", station, returnCode, data);
     }
 
     private onStationDatabaseCountByDate(station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseCountByDate>): void {

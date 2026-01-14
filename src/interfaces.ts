@@ -10,7 +10,7 @@ import { Device } from "./http/device";
 import { HTTPApiPersistentData, Picture, PropertyValue, Schedule } from "./http/interfaces";
 import { Station } from "./http/station";
 import { DeviceSmartLockMessage } from "./mqtt/model";
-import { DatabaseCountByDate, DatabaseQueryLatestInfo, DatabaseQueryLocal, StreamMetadata } from "./p2p/interfaces";
+import { DatabaseCountByDate, DatabaseQueryByDate, DatabaseQueryLatestInfo, DatabaseQueryLocal, StreamMetadata } from "./p2p/interfaces";
 import { CommandResult } from "./p2p/models";
 import { TalkbackStream } from "./p2p/talkback";
 import { AlarmEvent, DatabaseReturnCode, SmartSafeAlarm911Event, SmartSafeShakeAlarmEvent } from "./p2p/types";
@@ -124,6 +124,7 @@ export interface EufySecurityEvents {
     "station image download": (station: Station, file: string, image: Picture) => void;
     "station database query latest": (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryLatestInfo>) => void;
     "station database query local": (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryLocal>) => void;
+    "station database query by date": (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseQueryByDate>) => void;
     "station database count by date": (station: Station, returnCode: DatabaseReturnCode, data: Array<DatabaseCountByDate>) => void;
     "station database delete": (station: Station, returnCode: DatabaseReturnCode, failedIds: Array<unknown>) => void;
     "push connect": () => void;
