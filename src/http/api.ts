@@ -63,6 +63,7 @@ import {
 } from "./types";
 import { ParameterHelper } from "./parameter";
 import { encryptAPIData, decryptAPIData, getTimezoneGMTString, decodeImage, hexDate, hexTime, hexWeek } from "./utils";
+import { loginV3Passport } from "./v3/auth/passportLogin";
 import { InvalidCountryCodeError, InvalidLanguageCodeError, ensureError } from "./../error";
 import { getError, getShortUrl, md5, mergeDeep, parseJSON } from "./../utils";
 import {
@@ -502,6 +503,54 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
     });
     rootHTTPLogger.info("Please send requested captcha to proceed with authentication");
     this.emit("captcha request", dataResult.captcha_id, dataResult.item);
+  }
+
+  public async loginV3Passport(): Promise<void> {
+    const clientPrivateKey = this.persistentData.clientPrivateKey;
+    if (!clientPrivateKey) {
+      throw new Error("V3 passport login failed: missing client private key");
+    }
+
+    const { loginData } = await loginV3Passport({
+      apiBase: this.apiBase,
+      headers: this.headers,
+      token: this.token,
+      userId: this.persistentData.user_id,
+      username: this.username,
+      password: this.password,
+      clientPrivateKey,
+      serverPublicKey: this.persistentData.serverPublicKey || this.SERVER_PUBLIC_KEY,
+      onUnauthorized: () => {
+        this.invalidateToken();
+        this.emit("close");
+      },
+    });
+    this.persistentData.user_id = loginData.user_id;
+    if (loginData.nick_name !== undefined) {
+      this.persistentData.nick_name = loginData.nick_name;
+    }
+    if (loginData.server_secret_info?.public_key) {
+      this.persistentData.serverPublicKey = loginData.server_secret_info.public_key;
+    }
+    if (loginData.email) {
+      try {
+        this.persistentData.email = this.decryptAPIData(loginData.email, false);
+      } catch {
+        this.persistentData.email = loginData.email;
+      }
+    }
+
+    this.setToken(loginData.auth_token);
+    this.tokenExpiration = new Date(loginData.token_expires_at * 1000);
+    this.headers = {
+      ...this.headers,
+      gtoken: md5(loginData.user_id),
+    };
+    if (!this.connected) {
+      this.connected = true;
+      this.emit("connect");
+    }
+    this.scheduleRenewAuthToken();
   }
 
   public async login(options?: LoginOptions): Promise<void> {
@@ -1716,6 +1765,22 @@ export class HTTPApi extends TypedEmitter<HTTPApiEvents> {
 
   public getPersistentData(): HTTPApiPersistentData | undefined {
     return this.persistentData;
+  }
+
+  public getV3Headers(): Record<string, string | undefined> {
+    return { ...this.headers };
+  }
+
+  public invalidateAuthToken(): void {
+    this.invalidateToken();
+  }
+
+  public emitV3Event(event: "close"): void {
+    this.emit(event);
+  }
+
+  public close(): void {
+    this.clearScheduleRenewAuthToken();
   }
 
   public async getPassportProfile(): Promise<PassportProfileResponse | null> {

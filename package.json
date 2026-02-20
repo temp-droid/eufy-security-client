@@ -14,6 +14,8 @@
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "build": "npm run build:ts",
+    "demo:v3:get-device-list": "node build/scripts/demo-v3-get-device-list.js",
+    "demo:v3": "npm run build && npm run demo:v3:get-device-list",
     "watch:ts": "tsc -p tsconfig.build.json --watch",
     "watch": "npm run watch:ts",
     "lint": "eslint --ext .ts src",

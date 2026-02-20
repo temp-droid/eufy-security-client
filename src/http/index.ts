@@ -7,4 +7,6 @@ export * from "./parameter";
 export * from "./station";
 export * from "./types";
 export * from "./error";
+export * from "./v3";
+export { createV3Api, V3Api } from "./v3-api";
 export { isGreaterEqualMinVersion, getAbsoluteFilePath } from "./utils";
